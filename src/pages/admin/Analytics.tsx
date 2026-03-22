@@ -6,7 +6,6 @@ type ResultRow = {
   id: string;
   candidateName: string;
   candidateEmail: string;
-  enrollmentNo: string;
   assessmentTitle: string;
   questionTitle: string;
   status: string;
@@ -27,10 +26,6 @@ export const Analytics = () => {
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [filter, setFilter] = useState<'all' | 'passed' | 'failed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: keyof ResultRow; direction: 'asc' | 'desc' } | null>({
-    key: 'submittedAt',
-    direction: 'desc',
-  });
 
   const fetchAllResults = useCallback(async () => {
     setResultsLoading(true);
@@ -63,41 +58,12 @@ export const Analytics = () => {
 
   const fmt = (v?: string | null) => v ? new Date(v).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
-  const filteredRows = rows
-    .filter((r) => {
-      const matchFilter = filter === 'all' || (filter === 'passed' ? r.passed : !r.passed);
-      const q = searchQuery.toLowerCase();
-      const matchSearch =
-        !q ||
-        r.candidateName.toLowerCase().includes(q) ||
-        r.candidateEmail.toLowerCase().includes(q) ||
-        r.enrollmentNo.toLowerCase().includes(q) ||
-        r.assessmentTitle.toLowerCase().includes(q);
-      return matchFilter && matchSearch;
-    })
-    .sort((a, b) => {
-      if (!sortConfig) return 0;
-      const { key, direction } = sortConfig;
-      const valA = a[key];
-      const valB = b[key];
-
-      if (valA < valB) return direction === 'asc' ? -1 : 1;
-      if (valA > valB) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-  const requestSort = (key: keyof ResultRow) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const SortIcon = ({ col }: { col: keyof ResultRow }) => {
-    if (sortConfig?.key !== col) return <span className="ml-1 opacity-20">↕</span>;
-    return <span className="ml-1 text-slate-300">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>;
-  };
+  const filteredRows = rows.filter((r) => {
+    const matchFilter = filter === 'all' || (filter === 'passed' ? r.passed : !r.passed);
+    const q = searchQuery.toLowerCase();
+    const matchSearch = !q || r.candidateName.toLowerCase().includes(q) || r.candidateEmail.toLowerCase().includes(q) || r.assessmentTitle.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
 
   const passCount = rows.filter((r) => r.passed).length;
   const avgScore = rows.length > 0
@@ -192,22 +158,13 @@ export const Analytics = () => {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-800 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-900/30">
-                  <th className="px-5 py-3 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('candidateName')}>
-                    Candidate <SortIcon col="candidateName" />
-                  </th>
-                  <th className="px-5 py-3 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('enrollmentNo')}>
-                    Enrollment <SortIcon col="enrollmentNo" />
-                  </th>
+                  <th className="px-5 py-3">Candidate</th>
                   <th className="px-5 py-3">Context</th>
                   <th className="px-5 py-3">Question</th>
                   <th className="px-5 py-3">Status</th>
                   <th className="px-5 py-3">Tests Passed</th>
-                  <th className="px-5 py-3 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('score')}>
-                    Score <SortIcon col="score" />
-                  </th>
-                  <th className="px-5 py-3 cursor-pointer hover:text-white transition-colors" onClick={() => requestSort('submittedAt')}>
-                    Time <SortIcon col="submittedAt" />
-                  </th>
+                  <th className="px-5 py-3">Score</th>
+                  <th className="px-5 py-3">Submitted At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -217,10 +174,7 @@ export const Analytics = () => {
                     <tr key={row.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="px-5 py-3.5">
                         <div className="font-semibold text-white">{row.candidateName}</div>
-                        <div className="text-[10px] text-slate-500">{row.candidateEmail}</div>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="font-mono text-xs text-sky-400">{row.enrollmentNo || '—'}</div>
+                        <div className="text-xs text-slate-500">{row.candidateEmail}</div>
                       </td>
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
