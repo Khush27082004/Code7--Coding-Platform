@@ -2,6 +2,7 @@ export interface User {
   id: string;
   email: string;
   fullName: string;
+  enrollmentNo?: string;
   role: 'admin' | 'candidate';
 }
 

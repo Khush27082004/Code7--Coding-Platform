@@ -22,41 +22,41 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-700 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-xl">
-        <div className="mb-6 text-center">
-          <h2 className="text-3xl font-bold text-slate-900">Sign in</h2>
-          <p className="text-slate-500 mt-2"><b>Code7 - Assessments &amp; Practice Platform</b></p>
+      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-xl">
+        <div className="mb-4 text-center">
+          <h2 className="text-2xl font-bold text-slate-900">Sign in</h2>
+          <p className="text-slate-500 mt-1 text-sm"><b>Code7 - Assessments &amp; Practice Platform</b></p>
         </div>
         {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Email</label>
+          <div className="mb-3">
+            <label className="block text-gray-700 text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2">Password</label>
+          <div className="mb-5">
+            <label className="block text-gray-700 text-sm font-medium mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
               required
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+            className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
           >
             Sign In
           </button>
         </form>
-        <div className="mt-5 text-center text-slate-500 text-sm">
+        <div className="mt-4 text-center text-slate-500 text-sm">
           Don't have an account? <Link to="/register" className="text-indigo-600 font-semibold hover:text-indigo-800">Create one</Link>
         </div>
       </div>
