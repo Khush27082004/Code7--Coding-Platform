@@ -82,20 +82,12 @@ export const PracticeProblem = () => {
   const fetchQuestion = async () => {
     try {
       const res = await api.get(`/questions/${id}`);
-      setQuestion(res.data.data);
-      setCustomInput(res.data.data.sampleInput || '');
-      const starterCode = getStarterCode(res.data.data, language);
+      const questionData = res.data.data;
+      setQuestion(questionData);
+      setCustomInput(questionData.sampleInput || '');
+      const starterCode = getStarterCode(questionData, language);
       setCode(starterCode);
-
-      // Find next question
-      const allRes = await api.get('/questions');
-      const questions = allRes.data.data;
-      const currentIndex = questions.findIndex((q: any) => q.id === id);
-      if (currentIndex !== -1 && currentIndex + 1 < questions.length) {
-        setNextQuestionId(questions[currentIndex + 1].id);
-      } else {
-        setNextQuestionId(null);
-      }
+      setNextQuestionId(questionData.nextId);
     } catch (error) {
       console.error('Failed to fetch question', error);
     }
