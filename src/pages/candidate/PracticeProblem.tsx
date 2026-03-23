@@ -39,6 +39,7 @@ export const PracticeProblem = () => {
     return saved !== null ? parseInt(saved, 10) : 1800; // 30 minutes countdown start
   });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [switchCount, setSwitchCount] = useState(0);
 
   // Evaluation overlay
   const [evalOverlay, setEvalOverlay] = useState<EvalState | null>(null);
@@ -46,6 +47,34 @@ export const PracticeProblem = () => {
   useEffect(() => {
     fetchQuestion();
   }, [id]);
+
+  // Tab switch detection
+  useEffect(() => {
+    const userAssessmentId = new URLSearchParams(window.location.search).get('userAssessmentId');
+    if (!userAssessmentId) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setSwitchCount((prev) => {
+          const newCount = prev + 1;
+          
+          // Log to backend
+          api.patch(`/assessments/${userAssessmentId}/tab-switch`).catch(err => console.error('Failed to log tab switch', err));
+
+          if (newCount >= 2) {
+            alert('🚫 Security Breach: Multiple tab switches detected. Your test is being submitted automatically.');
+            submitSolution();
+          } else {
+            alert('⚠️ Warning: Tab switch detected (1/2). Your exam will be automatically submitted if you switch again.');
+          }
+          return newCount;
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [id, question, code, language, submitting]); // Re-bind if core state changes to ensure submitSolution works correctly
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -82,12 +111,20 @@ export const PracticeProblem = () => {
   const fetchQuestion = async () => {
     try {
       const res = await api.get(`/questions/${id}`);
-      const questionData = res.data.data;
-      setQuestion(questionData);
-      setCustomInput(questionData.sampleInput || '');
-      const starterCode = getStarterCode(questionData, language);
+      setQuestion(res.data.data);
+      setCustomInput(res.data.data.sampleInput || '');
+      const starterCode = getStarterCode(res.data.data, language);
       setCode(starterCode);
-      setNextQuestionId(questionData.nextId);
+
+      // Find next question
+      const allRes = await api.get('/questions');
+      const questions = allRes.data.data;
+      const currentIndex = questions.findIndex((q: any) => q.id === id);
+      if (currentIndex !== -1 && currentIndex + 1 < questions.length) {
+        setNextQuestionId(questions[currentIndex + 1].id);
+      } else {
+        setNextQuestionId(null);
+      }
     } catch (error) {
       console.error('Failed to fetch question', error);
     }
