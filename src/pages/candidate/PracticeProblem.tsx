@@ -50,31 +50,43 @@ export const PracticeProblem = () => {
 
   // Tab switch detection
   useEffect(() => {
-    const userAssessmentId = new URLSearchParams(window.location.search).get('userAssessmentId');
-    if (!userAssessmentId) return;
+    const uaId = new URLSearchParams(window.location.search).get('userAssessmentId');
+    console.log('[Anti-Cheat] Monitoring active. userAssessmentId:', uaId);
+
+    const handleSwitch = () => {
+      console.log('[Anti-Cheat] Tab switch or focus lost detected!');
+      setSwitchCount((prev) => {
+        const newCount = prev + 1;
+        
+        // Log to backend if in assessment mode
+        if (uaId) {
+          api.patch(`/assessments/${uaId}/tab-switch`).catch(err => console.error('[Anti-Cheat] Failed to log to backend', err));
+        }
+
+        if (newCount >= 2) {
+          alert('🚫 Security Breach: Multiple tab switches detected. Your test is being submitted automatically.');
+          submitSolution();
+        } else {
+          alert('⚠️ Warning: Tab switch detected (1/2). Your exam will be automatically submitted if you switch again.');
+        }
+        return newCount;
+      });
+    };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setSwitchCount((prev) => {
-          const newCount = prev + 1;
-          
-          // Log to backend
-          api.patch(`/assessments/${userAssessmentId}/tab-switch`).catch(err => console.error('Failed to log tab switch', err));
-
-          if (newCount >= 2) {
-            alert('🚫 Security Breach: Multiple tab switches detected. Your test is being submitted automatically.');
-            submitSolution();
-          } else {
-            alert('⚠️ Warning: Tab switch detected (1/2). Your exam will be automatically submitted if you switch again.');
-          }
-          return newCount;
-        });
+        handleSwitch();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [id, question, code, language, submitting]); // Re-bind if core state changes to ensure submitSolution works correctly
+    // Optional: window.addEventListener('blur', handleSwitch); 
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      // window.removeEventListener('blur', handleSwitch);
+    };
+  }, [id, question, code, language, submitting]); // Re-bind to ensure submitSolution has latest state
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
