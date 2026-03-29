@@ -181,7 +181,7 @@ export const Assessments = () => {
       setShowEdit(false);
       loadAssessments();
     } catch (err: any) { 
-      alert(err.response?.data?.message || 'Edit failed. Check console.'); 
+      alert(err.response?.data?.error?.message || 'Edit failed. Check console.'); 
     }
     finally { setEditing(false); }
   };
