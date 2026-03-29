@@ -53,35 +53,30 @@ export const PracticeProblem = () => {
   const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
-    // Instant initialization from dashboard state
-    if (location.state?.initialQuestion) {
-      const q = location.state.initialQuestion;
-      setQuestion(q);
-      setCustomInput(q.sampleInput || '');
-      setCode(getStarterCode(q, language));
-      if (location.state.initialUserAssessment) {
-        const ua = location.state.initialUserAssessment;
-        setUserAssessment(ua);
-        setSwitchCount(ua.tabSwitches || 0);
-        // Sync timer
-        const startTime = new Date(ua.startedAt).getTime();
-        const durationMs = ua.assessment.duration * 60 * 1000;
-        const elapsedMs = Date.now() - startTime;
-        const remainingSec = Math.max(0, Math.floor((durationMs - elapsedMs) / 1000));
-        setTimeLeft(remainingSec);
-        
-        // Show starting status for 1.5s
-        setIsInitializing(true);
-        setTimeout(() => setIsInitializing(false), 1500);
+    let ignore = false;
+    
+    const loadData = async () => {
+      // CLEAR ALL QUESTION-SPECIFIC STATE IMMEDIATELY
+      setQuestion(null);
+      setTestCaseResults([]);
+      setOutput('');
+      // Only reset code if we're not using initial location state
+      if (!location.state?.initialQuestion) {
+        setCode('');
       }
-      setLoading(false);
-    }
 
-    if (userAssessmentId) {
-      fetchAssessment();
-    } else {
-      fetchQuestion();
-    }
+      if (userAssessmentId) {
+        await fetchAssessment(id!, ignore);
+      } else {
+        await fetchQuestion(id!, ignore);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      ignore = true;
+    };
   }, [id, userAssessmentId]);
 
   // ─── EFFECTS ─────────────────────────────────────────────────────────────
@@ -143,6 +138,27 @@ export const PracticeProblem = () => {
     }
   }, [isDragging]);
 
+  // ─── AUTO-SAVE ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!userAssessmentId || !id || !code) return;
+
+    const timer = setInterval(async () => {
+      try {
+        await api.post('/assessments/progress/save', {
+          userAssessmentId,
+          questionId: id,
+          code,
+          language
+        });
+        console.log('Auto-saved progress at', new Date().toLocaleTimeString());
+      } catch (err) {
+        console.error('Auto-save failed', err);
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(timer);
+  }, [userAssessmentId, id, code, language]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -157,23 +173,40 @@ export const PracticeProblem = () => {
     return () => clearInterval(timer);
   }, [id, userAssessmentId]);
 
-  const fetchAssessment = async () => {
-    // If we have initial state, we don't need the 'Loading problem' full screen spinner
-    if (!location.state?.initialUserAssessment) {
+  const fetchSavedProgress = async (uaId: string, qId: string) => {
+    try {
+      const res = await api.get(`/assessments/progress/get?userAssessmentId=${uaId}&questionId=${qId}`);
+      if (res.data.data?.code) {
+        setCode(res.data.data.code);
+        if (res.data.data.language) setLanguage(res.data.data.language);
+      }
+    } catch (err) {
+      console.error('Failed to fetch saved progress', err);
+    }
+  };
+
+  const fetchAssessment = async (questionId: string, ignore: boolean) => {
+    if (!location.state?.initialUserAssessment && !question) {
       setLoading(true);
     }
     try {
+      // Cache-busting 't' parameter ensures we don't load stale data
       const [qRes, uaRes] = await Promise.all([
-        api.get(`/questions/${id}`),
-        api.get(`/user-assessments/${userAssessmentId}`)
+        api.get(`/questions/${questionId}?t=${Date.now()}`),
+        api.get(`/assessments/session/${userAssessmentId}`)
       ]);
+
+      if (ignore) return;
 
       const q = qRes.data.data;
       const ua = uaRes.data.data;
 
       setQuestion(q);
       setCustomInput(q.sampleInput || '');
-      if (!code) setCode(getStarterCode(q, language));
+      
+      // Load saved progress for the specific question
+      await fetchSavedProgress(ua.id, questionId);
+      
       setUserAssessment(ua);
       setSwitchCount(ua.tabSwitches || 0);
 
@@ -183,34 +216,39 @@ export const PracticeProblem = () => {
       const remainingSec = Math.max(0, Math.floor((durationMs - elapsedMs) / 1000));
       setTimeLeft(remainingSec);
     } catch (err) {
-      console.error("Failed to fetch assessment context", err);
+      if (!ignore) console.error("Failed to fetch assessment context", err);
     } finally {
-      setLoading(false);
+      if (!ignore) setLoading(false);
     }
   };
 
-  const fetchQuestion = async () => {
-    if (!location.state?.initialQuestion) {
+  const fetchQuestion = async (questionId: string, ignore: boolean) => {
+    if (!location.state?.initialQuestion && !question) {
       setLoading(true);
     }
     try {
       const [qRes, allRes] = await Promise.all([
-        api.get(`/questions/${id}`),
+        api.get(`/questions/${questionId}?t=${Date.now()}`),
         api.get('/questions')
       ]);
+
+      if (ignore) return;
 
       const q = qRes.data.data;
       setQuestion(q);
       setCustomInput(q.sampleInput || '');
+      
+      // If we don't have code yet, set the starter code
+      // We check !code to avoid overwriting typed code if the user happens to nav-back
       if (!code) setCode(getStarterCode(q, language));
 
       const questions = allRes.data.data;
-      const currentIndex = questions.findIndex((item: any) => item.id === id);
+      const currentIndex = questions.findIndex((item: any) => item.id === questionId);
       setNextQuestionId(currentIndex !== -1 && currentIndex + 1 < questions.length ? questions[currentIndex + 1].id : null);
     } catch (error) {
-      console.error('Failed to fetch question', error);
+      if (!ignore) console.error('Failed to fetch question', error);
     } finally {
-      setLoading(false);
+      if (!ignore) setLoading(false);
     }
   };
 
@@ -303,7 +341,7 @@ export const PracticeProblem = () => {
       return;
     }
 
-    // Assessment submission flow with polling
+    // Assessment submission flow with streaming
     setSubmitting(true);
     setEvalOverlay({ stage: 'submitting', message: 'Submitting your solution...', passedTests: 0, totalTests: 0, score: 0, maxScore: 0, results: [] });
 
@@ -311,51 +349,113 @@ export const PracticeProblem = () => {
       const sub = await api.post('/submissions', { userAssessmentId, questionId: id, language, code });
       const submissionId = sub.data.data.id;
 
-      setEvalOverlay(prev => prev ? { ...prev, stage: 'evaluating', message: 'Evaluating against test cases...' } : prev);
+      setEvalOverlay({ stage: 'evaluating', message: 'Evaluating against test cases...', passedTests: 0, totalTests: 0, score: 0, maxScore: 0, results: [] });
+      
+      // Start streaming results
+      await streamResults(submissionId);
+    } catch (err) {
+      console.error('Submission error', err);
+      setEvalOverlay({ stage: 'error', message: 'Submission failed. Please try again.', passedTests: 0, totalTests: 0, score: 0, maxScore: 0, results: [] });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-      let attempts = 0;
-      const interval = setInterval(async () => {
-        attempts += 1;
-        try {
-          const statusRes = await api.get(`/submissions/${submissionId}`);
-          const evaluated = statusRes.data.data;
-          if (evaluated.status === 'completed') {
-            clearInterval(interval);
-            const passed = evaluated.passedTests || 0;
-            const total = evaluated.totalTests || question.testCases?.length || 0;
-            const sc = evaluated.score || 0;
-            const mx = question.testCases?.reduce((s: number, tc: any) => s + (tc.points ?? 1), 0) || 0;
-            const results = evaluated.submissionResults?.map((r: any) => ({
-              id: r.testCaseId,
-              input: r.testCase?.input || '',
-              expectedOutput: r.testCase?.expectedOutput || '',
-              actualOutput: r.actualOutput || '',
-              status: r.status,
-              pointsEarned: r.pointsEarned || 0,
-              pointsAvailable: r.testCase?.points || 0,
-              errorMessage: r.errorMessage,
-            })) || [];
-            setPassedTests(passed); setTotalTests(total); setScore(sc); setMaxScore(mx);
-            setTestCaseResults(results);
-            setOutput(`Submission complete: ${passed}/${total} passed, score ${sc}`);
-            setEvalOverlay({ stage: 'done', message: `Evaluation complete`, passedTests: passed, totalTests: total, score: sc, maxScore: mx, results });
-            setSubmitting(false);
-          } else if (attempts >= 30) {
-            clearInterval(interval);
-            setEvalOverlay(prev => prev ? { ...prev, stage: 'error', message: 'Evaluation timed out. Check submission history.' } : prev);
-            setSubmitting(false);
-          }
-        } catch {
-          if (attempts >= 30) {
-            clearInterval(interval);
-            setEvalOverlay(prev => prev ? { ...prev, stage: 'error', message: 'Server error. Check submission history.' } : prev);
-            setSubmitting(false);
+  const streamResults = async (submissionId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+      const response = await fetch(`${baseUrl}/submissions/stream/${submissionId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.body) return;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let results: any[] = [];
+      let passedCount = 0;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (!results.find(r => r.id === data.testCaseId)) {
+                const newRes = {
+                  id: data.testCaseId,
+                  status: data.status,
+                  pointsEarned: data.pointsEarned,
+                  pointsAvailable: data.pointsAvailable || 0,
+                  errorMessage: data.errorMessage,
+                  passed: data.passed
+                };
+                results = [...results, newRes];
+                if (data.passed) passedCount++;
+
+                setEvalOverlay(prev => prev ? {
+                  ...prev,
+                  passedTests: passedCount,
+                  results: [...results]
+                } : prev);
+                
+                setTestCaseResults([...results]);
+                setPassedTests(passedCount);
+              }
+            } catch (e) { /* partial chunk */ }
           }
         }
-      }, 1000);
-    } catch {
-      setEvalOverlay(prev => prev ? { ...prev, stage: 'error', message: 'Submission failed. Please try again.' } : prev);
-      setSubmitting(false);
+      }
+
+      // Final results fetch
+      const finalRes = await api.get(`/submissions/${submissionId}`);
+      const finalSub = finalRes.data.data;
+      
+      const finalResults = finalSub.submissionResults?.map((r: any) => ({
+        id: r.testCaseId,
+        input: r.testCase?.input || '',
+        expectedOutput: r.testCase?.expectedOutput || '',
+        actualOutput: r.actualOutput || '',
+        status: r.status,
+        pointsEarned: r.pointsEarned || 0,
+        pointsAvailable: r.testCase?.points || 0,
+        errorMessage: r.errorMessage,
+      })) || [];
+
+      setPassedTests(finalSub.passedTests);
+      setTotalTests(finalSub.totalTests);
+      setScore(finalSub.score);
+      setMaxScore(finalSub.maxScore);
+      setTestCaseResults(finalResults);
+      setEvalOverlay({
+        stage: 'done',
+        message: `${finalSub.passedTests}/${finalSub.totalTests} test cases passed`,
+        passedTests: finalSub.passedTests,
+        totalTests: finalSub.totalTests,
+        score: finalSub.score,
+        maxScore: finalSub.maxScore,
+        results: finalResults
+      });
+    } catch (err) {
+      console.error('Streaming error', err);
+      const res = await api.get(`/submissions/${submissionId}`);
+      const s = res.data.data;
+      setEvalOverlay({
+        stage: 'done',
+        message: 'Evaluation complete',
+        passedTests: s.passedTests || 0,
+        totalTests: s.totalTests || 0,
+        score: s.score || 0,
+        maxScore: s.maxScore || 100,
+        results: s.submissionResults || []
+      });
     }
   };
 
@@ -635,31 +735,12 @@ export const PracticeProblem = () => {
 
         <div className="h-5 w-px bg-zinc-200" />
 
-        {/* Assessment Navigation (Prev/Next) */}
-        {userAssessmentId && (
-          <div className="flex items-center gap-1 mr-2">
-            <button
-               disabled={userAssessment?.assessment?.assessmentQuestions.findIndex((aq:any) => aq.questionId === id) === 0}
-               onClick={() => {
-                 const idx = userAssessment?.assessment?.assessmentQuestions.findIndex((aq:any) => aq.questionId === id);
-                 const prevId = userAssessment?.assessment?.assessmentQuestions[idx-1]?.questionId;
-                 if (prevId) navigate(`/practice/${prevId}?userAssessmentId=${userAssessmentId}`);
-               }}
-               className="p-1.5 hover:bg-zinc-100 disabled:opacity-30 rounded-md transition-colors"
-            >
-              <svg className="w-4 h-4 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6" /></svg>
-            </button>
-            <button
-               disabled={userAssessment?.assessment?.assessmentQuestions.findIndex((aq:any) => aq.questionId === id) === userAssessment?.assessment?.assessmentQuestions.length - 1}
-               onClick={() => {
-                 const idx = userAssessment?.assessment?.assessmentQuestions.findIndex((aq:any) => aq.questionId === id);
-                 const nextId = userAssessment?.assessment?.assessmentQuestions[idx+1]?.questionId;
-                 if (nextId) navigate(`/practice/${nextId}?userAssessmentId=${userAssessmentId}`);
-               }}
-               className="p-1.5 hover:bg-zinc-100 disabled:opacity-30 rounded-md transition-colors"
-            >
-              <svg className="w-4 h-4 text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6" /></svg>
-            </button>
+        {/* Question Counter (Assessment only) */}
+        {userAssessmentId && userAssessment?.assessment?.assessmentQuestions && (
+          <div className="flex items-center px-2 py-1 bg-zinc-100 rounded-md border border-zinc-200">
+            <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-tight">
+              Question {userAssessment.assessment.assessmentQuestions.findIndex((aq: any) => aq.questionId === id) + 1} of {userAssessment.assessment.assessmentQuestions.length}
+            </span>
           </div>
         )}
 
@@ -741,6 +822,40 @@ export const PracticeProblem = () => {
             )}
             {runCooldown > 0 ? `Wait ${runCooldown}s` : 'Submit'}
           </button>
+
+          {/* New Prominent Assessment Navigation */}
+          {userAssessmentId && userAssessment?.assessment?.assessmentQuestions && (
+            <>
+              {userAssessment.assessment.assessmentQuestions.findIndex((aq: any) => aq.questionId === id) > 0 && (
+                <button
+                  onClick={() => {
+                    const aqs = userAssessment.assessment.assessmentQuestions;
+                    const currentIndex = aqs.findIndex((aq: any) => aq.questionId === id);
+                    const prevId = aqs[currentIndex - 1].questionId;
+                    navigate(`/practice/${prevId}?userAssessmentId=${userAssessmentId}`);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 text-zinc-700 hover:bg-zinc-200 rounded-md text-[11px] font-bold border border-zinc-200 transition-all shadow-sm"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6" /></svg>
+                  Prev Question
+                </button>
+              )}
+              {userAssessment.assessment.assessmentQuestions.findIndex((aq: any) => aq.questionId === id) < userAssessment.assessment.assessmentQuestions.length - 1 && (
+                <button
+                  onClick={() => {
+                    const aqs = userAssessment.assessment.assessmentQuestions;
+                    const currentIndex = aqs.findIndex((aq: any) => aq.questionId === id);
+                    const nextId = aqs[currentIndex + 1].questionId;
+                    navigate(`/practice/${nextId}?userAssessmentId=${userAssessmentId}`);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md text-[11px] font-bold transition-all shadow-sm"
+                >
+                  Next Question
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+              )}
+            </>
+          )}
         </div>
       </header>
 
