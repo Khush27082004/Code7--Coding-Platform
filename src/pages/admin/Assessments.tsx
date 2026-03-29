@@ -88,6 +88,7 @@ export const Assessments = () => {
   // edit modal
   const [showEdit, setShowEdit] = useState(false);
   const [editTarget, setEditTarget] = useState<Assessment | null>(null);
+  const [editSelQIds, setEditSelQIds] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', description: '', duration: 60, passingScore: 50, isActive: true });
 
@@ -147,7 +148,7 @@ export const Assessments = () => {
     finally { setCreating(false); }
   };
 
-  const openEdit = (a: Assessment) => {
+  const openEdit = async (a: Assessment) => {
     setEditTarget(a);
     setEditForm({
       title: a.title || '',
@@ -156,7 +157,16 @@ export const Assessments = () => {
       passingScore: a.passingScore || 0,
       isActive: a.isActive ?? true,
     });
+    setEditSelQIds([]);
     setShowEdit(true);
+
+    try {
+      const r = await api.get(`/assessments/${a.id}`);
+      const aqs = r.data.data.assessmentQuestions || [];
+      setEditSelQIds(aqs.map((aq: any) => aq.questionId));
+    } catch {
+      setEditSelQIds([]);
+    }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
@@ -164,15 +174,25 @@ export const Assessments = () => {
     if (!editTarget) return;
     setEditing(true);
     try {
-      await api.put(`/assessments/${editTarget.id}`, editForm);
+      await api.put(`/assessments/${editTarget.id}`, {
+        ...editForm,
+        questions: editSelQIds.map(id => ({ questionId: id, points: 100 })),
+      });
       setShowEdit(false);
       loadAssessments();
-    } catch { alert('Edit failed.'); }
+    } catch (err: any) { 
+      alert(err.response?.data?.message || 'Edit failed. Check console.'); 
+    }
     finally { setEditing(false); }
   };
 
   const toggleQ = (id: string) =>
     setSelQIds(p => (p.includes(id) ? p.filter(x => x !== id) : [...p, id]));
+
+  const toggleEditQ = (id: string) => {
+    if (editForm.isActive) return;
+    setEditSelQIds(p => (p.includes(id) ? p.filter(x => x !== id) : [...p, id]));
+  };
 
   // ─── render ─────────────────────────────────────────────────────────────────
   return (
@@ -499,6 +519,46 @@ export const Assessments = () => {
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
+            </div>
+
+            {/* Question picker for Edit */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Questions
+                </label>
+                <span className="text-xs text-slate-600">
+                  {editSelQIds.length} selected
+                </span>
+              </div>
+              <div className={`bg-slate-900 border ${editForm.isActive ? 'border-slate-800 opacity-60' : 'border-slate-700'} rounded-xl overflow-hidden max-h-48 overflow-y-auto divide-y divide-slate-800`}>
+                {allQuestions.length === 0 ? (
+                  <p className="px-4 py-6 text-center text-slate-600 text-sm">No questions found.</p>
+                ) : (
+                  allQuestions.map(q => {
+                    const sel = editSelQIds.includes(q.id);
+                    return (
+                      <div
+                        key={q.id}
+                        onClick={() => toggleEditQ(q.id)}
+                        className={`flex items-center justify-between px-4 py-3 ${editForm.isActive ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800'} transition-colors ${sel && !editForm.isActive ? 'bg-indigo-600/10' : ''}`}
+                      >
+                        <div>
+                          <span className="text-sm font-semibold text-slate-200">{q.title}</span>
+                        </div>
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${sel ? 'bg-indigo-600 border-indigo-600' : 'border-slate-700'}`}>
+                          {sel && <span className="text-white text-[10px]">✓</span>}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {editForm.isActive && (
+                <p className="text-[10px] text-amber-500/80 mt-1.5">
+                  🔒 Questions are locked while the test is Active. Switch to Inactive to re-enable editing.
+                </p>
+              )}
             </div>
 
             {/* Active Toggle */}
