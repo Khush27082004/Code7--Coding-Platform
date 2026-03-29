@@ -90,6 +90,7 @@ export const Assessments = () => {
   const [editTarget, setEditTarget] = useState<Assessment | null>(null);
   const [editSelQIds, setEditSelQIds] = useState<string[]>([]);
   const [editing, setEditing] = useState(false);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [editForm, setEditForm] = useState({ title: '', description: '', duration: 60, passingScore: 50, isActive: true });
 
   useEffect(() => {
@@ -158,6 +159,7 @@ export const Assessments = () => {
       isActive: a.isActive ?? true,
     });
     setEditSelQIds([]);
+    setLoadingQuestions(true);
     setShowEdit(true);
 
     try {
@@ -166,6 +168,8 @@ export const Assessments = () => {
       setEditSelQIds(aqs.map((aq: any) => aq.questionId));
     } catch {
       setEditSelQIds([]);
+    } finally {
+      setLoadingQuestions(false);
     }
   };
 
@@ -528,11 +532,16 @@ export const Assessments = () => {
                   Questions
                 </label>
                 <span className="text-xs text-slate-600">
-                  {editSelQIds.length} selected
+                  {loadingQuestions ? 'Loading…' : `${editSelQIds.length} selected`}
                 </span>
               </div>
-              <div className={`bg-slate-900 border ${editForm.isActive ? 'border-slate-800 opacity-60' : 'border-slate-700'} rounded-xl overflow-hidden max-h-48 overflow-y-auto divide-y divide-slate-800`}>
-                {allQuestions.length === 0 ? (
+              <div className={`bg-slate-900 border ${editForm.isActive || loadingQuestions ? 'border-slate-800 opacity-60' : 'border-slate-700'} rounded-xl overflow-hidden max-h-48 overflow-y-auto divide-y divide-slate-800`}>
+                {loadingQuestions ? (
+                  <div className="px-4 py-8 text-center">
+                    <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-slate-500 text-xs">Fetching current questions…</p>
+                  </div>
+                ) : allQuestions.length === 0 ? (
                   <p className="px-4 py-6 text-center text-slate-600 text-sm">No questions found.</p>
                 ) : (
                   allQuestions.map(q => {
@@ -541,7 +550,7 @@ export const Assessments = () => {
                       <div
                         key={q.id}
                         onClick={() => toggleEditQ(q.id)}
-                        className={`flex items-center justify-between px-4 py-3 ${editForm.isActive ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800'} transition-colors ${sel && !editForm.isActive ? 'bg-indigo-600/10' : ''}`}
+                        className={`flex items-center justify-between px-4 py-3 ${editForm.isActive || loadingQuestions ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800'} transition-colors ${sel && !editForm.isActive && !loadingQuestions ? 'bg-indigo-600/10' : ''}`}
                       >
                         <div>
                           <span className="text-sm font-semibold text-slate-200">{q.title}</span>
@@ -554,7 +563,7 @@ export const Assessments = () => {
                   })
                 )}
               </div>
-              {editForm.isActive && (
+              {editForm.isActive && !loadingQuestions && (
                 <p className="text-[10px] text-amber-500/80 mt-1.5">
                   🔒 Questions are locked while the test is Active. Switch to Inactive to re-enable editing.
                 </p>
@@ -567,6 +576,7 @@ export const Assessments = () => {
                 <div className="relative flex items-center">
                   <input
                     type="checkbox"
+                    disabled={loadingQuestions}
                     className="sr-only"
                     checked={editForm.isActive}
                     onChange={e => setEditForm(p => ({ ...p, isActive: e.target.checked }))}
@@ -583,10 +593,10 @@ export const Assessments = () => {
 
             <button
               type="submit"
-              disabled={editing}
+              disabled={editing || loadingQuestions}
               className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
             >
-              {editing ? 'Saving…' : 'Save Changes'}
+              {editing ? 'Saving…' : loadingQuestions ? 'Loading…' : 'Save Changes'}
             </button>
           </form>
         </Modal>
