@@ -72,18 +72,23 @@ const Modal = ({
 export const Assessments = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // scoreboard
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, ResultsData>>({});
   const [resultsLoading, setResultsLoading] = useState<Record<string, boolean>>({});
 
+  const filteredAssessments = assessments.filter(a => 
+    a.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // create modal
   const [showCreate, setShowCreate] = useState(false);
   const [allQuestions, setAllQuestions] = useState<Question[]>([]);
   const [selQIds, setSelQIds] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', duration: 60, passingScore: 50 });
+  const [form, setForm] = useState({ title: '', description: '', duration: 60, passingScore: 50, isActive: true });
 
   // edit modal
   const [showEdit, setShowEdit] = useState(false);
@@ -149,7 +154,7 @@ export const Assessments = () => {
         questions: selQIds.map(id => ({ questionId: id, points: 100 })),
       });
       setShowCreate(false);
-      setForm({ title: '', description: '', duration: 60, passingScore: 50 });
+      setForm({ title: '', description: '', duration: 60, passingScore: 50, isActive: true });
       setSelQIds([]);
       loadAssessments();
     } catch { alert('Failed to create. Check console.'); }
@@ -225,6 +230,22 @@ export const Assessments = () => {
           </button>
         </div>
 
+        {/* Filters */}
+        {!loading && assessments.length > 0 && (
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <input
+                type="text"
+                placeholder="Search assessments..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-2.5 pl-10 text-sm text-white placeholder-slate-600 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              />
+              <svg className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+            </div>
+          </div>
+        )}
+
         {/* Assessment list */}
         {loading ? (
           <div className="py-20 text-center text-slate-600 animate-pulse">Loading assessments…</div>
@@ -242,7 +263,7 @@ export const Assessments = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {assessments.map(a => (
+            {filteredAssessments.map(a => (
               <div key={a.id} className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden">
 
                 {/* Card header */}
@@ -463,6 +484,26 @@ export const Assessments = () => {
               </div>
             </div>
 
+            {/* Active Toggle for Create */}
+            <div className="pt-2">
+              <label className={`flex items-center gap-3 p-4 border rounded-xl transition-all cursor-pointer ${form.isActive ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-700 bg-slate-900/50 hover:border-slate-600'}`}>
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={form.isActive}
+                    onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))}
+                  />
+                  <div className={`w-10 h-6 bg-slate-800 rounded-full transition-colors ${form.isActive ? 'bg-emerald-500' : ''}`}></div>
+                  <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${form.isActive ? 'translate-x-4' : ''}`}></div>
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white leading-none">Assessment Active</div>
+                  <div className="text-xs text-slate-500 mt-1">If active, candidates can view and start this test.</div>
+                </div>
+              </label>
+            </div>
+
             <button
               type="submit"
               disabled={creating}
@@ -579,7 +620,7 @@ export const Assessments = () => {
 
             {/* Active Toggle */}
             <div className="pt-2">
-              <label className="flex items-center gap-3 p-4 border border-slate-700 rounded-xl bg-slate-900/50 cursor-pointer hover:border-slate-600 transition-colors">
+              <label className={`flex items-center gap-3 p-4 border rounded-xl transition-all cursor-pointer ${editForm.isActive ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-700 bg-slate-900/50 hover:border-slate-600'}`}>
                 <div className="relative flex items-center">
                   <input
                     type="checkbox"
