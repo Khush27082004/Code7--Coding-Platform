@@ -50,6 +50,7 @@ export const PracticeProblem = () => {
   const userAssessmentId = queryParams.get('userAssessmentId');
   const [userAssessment, setUserAssessment] = useState<any>(null);
   const [switchCount, setSwitchCount] = useState(0);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
     // Instant initialization from dashboard state
@@ -68,6 +69,10 @@ export const PracticeProblem = () => {
         const elapsedMs = Date.now() - startTime;
         const remainingSec = Math.max(0, Math.floor((durationMs - elapsedMs) / 1000));
         setTimeLeft(remainingSec);
+        
+        // Show starting status for 1.5s
+        setIsInitializing(true);
+        setTimeout(() => setIsInitializing(false), 1500);
       }
       setLoading(false);
     }
@@ -230,7 +235,7 @@ export const PracticeProblem = () => {
 
   const runCode = async () => {
     if (runCooldown > 0) return;
-    setRunCooldown(7);
+    setRunCooldown(10);
     setLoading(true);
     setOutput('Running...');
     setActiveTab('results');
@@ -246,7 +251,7 @@ export const PracticeProblem = () => {
 
   const runAllTestCases = async () => {
     if (runCooldown > 0) return;
-    setRunCooldown(7);
+    setRunCooldown(10);
     setLoading(true);
     setOutput('Running all test cases...');
     setActiveTab('results');
@@ -271,7 +276,7 @@ export const PracticeProblem = () => {
     const userAssessmentId = new URLSearchParams(window.location.search).get('userAssessmentId');
 
     // For assessment, set cooldown immediately
-    if (userAssessmentId) setRunCooldown(7);
+    if (userAssessmentId) setRunCooldown(10);
     else setRunCooldown(3); // shorter for practice
 
     // No assessment context → persist as a practice submission
@@ -372,6 +377,27 @@ export const PracticeProblem = () => {
     cpp: '⚙️',
     c: 'Ⓒ',
   };
+
+  if (isInitializing) {
+    return (
+      <div className="fixed inset-0 z-[100] bg-zinc-900/90 backdrop-blur-md flex flex-col items-center justify-center text-white">
+        <div className="relative w-20 h-20 mb-6">
+          <div className="absolute inset-0 border-4 border-emerald-500/20 rounded-full" />
+          <div className="absolute inset-0 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="absolute inset-4 bg-emerald-500/10 rounded-full flex items-center justify-center">
+            <span className="text-2xl">🚀</span>
+          </div>
+        </div>
+        <h2 className="text-xl font-bold tracking-tight mb-2">Setting up your assessment session</h2>
+        <p className="text-emerald-400 font-medium animate-pulse">Initializing secure environment...</p>
+        <div className="mt-8 flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!question) return (
     <div className="min-h-screen bg-white flex items-center justify-center">
