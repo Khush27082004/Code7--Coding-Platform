@@ -120,16 +120,19 @@ export const PracticeProblem = () => {
   }, [id, userAssessmentId]);
 
   const fetchAssessment = async () => {
+    setLoading(true);
     try {
-      // Need to find the assessment this UA belongs to
-      // For now, assume the start API gives us what we need or we fetch details
-      const qRes = await api.get(`/questions/${id}`);
-      setQuestion(qRes.data.data);
-      setCustomInput(qRes.data.data.sampleInput || '');
-      setCode(getStarterCode(qRes.data.data, language));
+      const [qRes, uaRes] = await Promise.all([
+        api.get(`/questions/${id}`),
+        api.get(`/user-assessments/${userAssessmentId}`)
+      ]);
 
-      const uaRes = await api.get(`/user-assessments/${userAssessmentId}`);
+      const q = qRes.data.data;
       const ua = uaRes.data.data;
+
+      setQuestion(q);
+      setCustomInput(q.sampleInput || '');
+      setCode(getStarterCode(q, language));
       setUserAssessment(ua);
       setSwitchCount(ua.tabSwitches || 0);
 
@@ -139,24 +142,29 @@ export const PracticeProblem = () => {
       const elapsedMs = Date.now() - startTime;
       const remainingSec = Math.max(0, Math.floor((durationMs - elapsedMs) / 1000));
       setTimeLeft(remainingSec);
-
     } catch (err) {
       console.error("Failed to fetch assessment context", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchQuestion = async () => {
+    setLoading(true);
     try {
-      const res = await api.get(`/questions/${id}`);
-      setQuestion(res.data.data);
-      setCustomInput(res.data.data.sampleInput || '');
-      const starterCode = getStarterCode(res.data.data, language);
-      setCode(starterCode);
+      const [qRes, allRes] = await Promise.all([
+        api.get(`/questions/${id}`),
+        api.get('/questions')
+      ]);
+
+      const q = qRes.data.data;
+      setQuestion(q);
+      setCustomInput(q.sampleInput || '');
+      setCode(getStarterCode(q, language));
 
       // Find next question
-      const allRes = await api.get('/questions');
       const questions = allRes.data.data;
-      const currentIndex = questions.findIndex((q: any) => q.id === id);
+      const currentIndex = questions.findIndex((item: any) => item.id === id);
       if (currentIndex !== -1 && currentIndex + 1 < questions.length) {
         setNextQuestionId(questions[currentIndex + 1].id);
       } else {
@@ -164,6 +172,8 @@ export const PracticeProblem = () => {
       }
     } catch (error) {
       console.error('Failed to fetch question', error);
+    } finally {
+      setLoading(false);
     }
   };
 

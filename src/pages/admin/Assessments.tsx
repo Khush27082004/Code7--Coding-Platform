@@ -94,8 +94,17 @@ export const Assessments = () => {
   const [editForm, setEditForm] = useState({ title: '', description: '', duration: 60, passingScore: 50, isActive: true });
 
   useEffect(() => {
-    loadAssessments();
-    loadQuestions();
+    const init = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([loadAssessments(), loadQuestions()]);
+      } catch (err) {
+        console.error('Initial load failed', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   const loadAssessments = async () => {
@@ -104,8 +113,6 @@ export const Assessments = () => {
       setAssessments(r.data.data ?? []);
     } catch {
       /* ignore */
-    } finally {
-      setLoading(false);
     }
   };
 
