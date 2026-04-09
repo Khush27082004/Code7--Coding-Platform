@@ -677,23 +677,25 @@ export const PracticeProblem = () => {
                 >
                   View Details
                 </button>
-                <button
-                  onClick={() => {
-                    closeEvalOverlay();
-                    if (nextQuestionId) {
-                      navigate(`/practice/${nextQuestionId}`);
-                    } else {
-                      navigate('/');
-                    }
-                  }}
-                  className="bg-zinc-900 hover:bg-zinc-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
-                >
-                  {nextQuestionId ? (
-                    <>Next Problem <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg></>
-                  ) : (
-                    <>Return Home <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg></>
-                  )}
-                </button>
+                {!userAssessmentId && (
+                  <button
+                    onClick={() => {
+                      closeEvalOverlay();
+                      if (nextQuestionId) {
+                        navigate(`/practice/${nextQuestionId}`);
+                      } else {
+                        navigate('/');
+                      }
+                    }}
+                    className="bg-zinc-900 hover:bg-zinc-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
+                  >
+                    {nextQuestionId ? (
+                      <>Next Problem <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6" /></svg></>
+                    ) : (
+                      <>Return Home <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg></>
+                    )}
+                  </button>
+                )}
               </div>
             )}
           </div>
