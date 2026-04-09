@@ -464,6 +464,27 @@ export const PracticeProblem = () => {
     setActiveTab('results');
   };
 
+  const finishAssessment = async () => {
+    if (!userAssessmentId) return;
+
+    const confirmed = window.confirm(
+      'Are you sure you want to end the test? You will not be able to make any further changes or submissions.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      await api.post(`/assessments/${userAssessmentId}/submit`);
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to finish assessment', err);
+      alert('Failed to end test. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const difficultyConfig: Record<string, { label: string; cls: string }> = {
     easy: { label: 'Easy', cls: 'text-green-500 bg-green-500/10 border-green-500/20' },
     medium: { label: 'Medium', cls: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' },
@@ -826,6 +847,15 @@ export const PracticeProblem = () => {
           {/* New Prominent Assessment Navigation */}
           {userAssessmentId && userAssessment?.assessment?.assessmentQuestions && (
             <>
+              <button
+                onClick={finishAssessment}
+                disabled={loading}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 rounded-md text-[11px] font-bold transition-all shadow-sm mr-auto"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                End Test
+              </button>
+
               {userAssessment.assessment.assessmentQuestions.findIndex((aq: any) => aq.questionId === id) > 0 && (
                 <button
                   onClick={() => {
