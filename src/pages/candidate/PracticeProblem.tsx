@@ -806,27 +806,25 @@ export const PracticeProblem = () => {
             )}
             {runCooldown > 0 ? `Wait ${runCooldown}s` : 'Run'}
           </button>
-          {!userAssessmentId && (
-            <button
-              onClick={runAllTestCases}
-              disabled={loading || runCooldown > 0}
-              className={`flex items-center gap-1.5 transition-all shadow-sm px-3 py-1.5 rounded-md text-[11px] font-bold border ${
-                runCooldown > 0 
-                  ? 'bg-amber-50 text-amber-600 border-amber-200 cursor-not-allowed animate-pulse shadow-inner' 
-                  : 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 disabled:opacity-40 border-zinc-200'
-              }`}
-            >
-              {(loading || runCooldown > 0) ? (
-                <svg className={`w-3 h-3 ${runCooldown > 0 ? '' : 'animate-spin'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                   <circle cx="12" cy="12" r="10" />
-                   <path d="M12 2a10 10 0 0 1 10 10" />
-                </svg>
-              ) : (
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
-              )}
-              {runCooldown > 0 ? `Wait ${runCooldown}s` : 'Run tests'}
-            </button>
-          )}
+          <button
+            onClick={runAllTestCases}
+            disabled={loading || runCooldown > 0}
+            className={`flex items-center gap-1.5 transition-all shadow-sm px-3 py-1.5 rounded-md text-[11px] font-bold border ${
+              runCooldown > 0 
+                ? 'bg-amber-50 text-amber-600 border-amber-200 cursor-not-allowed animate-pulse shadow-inner' 
+                : 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200 disabled:opacity-40 border-zinc-200'
+            }`}
+          >
+            {(loading || runCooldown > 0) ? (
+              <svg className={`w-3 h-3 ${runCooldown > 0 ? '' : 'animate-spin'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                 <circle cx="12" cy="12" r="10" />
+                 <path d="M12 2a10 10 0 0 1 10 10" />
+              </svg>
+            ) : (
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+            )}
+            {runCooldown > 0 ? `Wait ${runCooldown}s` : 'Run tests'}
+          </button>
           <button
             onClick={submitSolution}
             disabled={submitting || loading || runCooldown > 0}
