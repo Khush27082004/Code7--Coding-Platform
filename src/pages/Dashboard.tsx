@@ -126,12 +126,7 @@ export const Dashboard = () => {
                             const ua = res.data.data;
                             const firstAQ = ua.assessment.assessmentQuestions[0];
                             if (firstAQ) {
-                              navigate(`/practice/${firstAQ.questionId}?userAssessmentId=${ua.id}`, {
-                                state: { 
-                                  initialQuestion: firstAQ.question,
-                                  initialUserAssessment: ua
-                                }
-                              });
+                              navigate(`/practice/${firstAQ.questionId}?userAssessmentId=${ua.id}`);
                             } else {
                               alert('This assessment has no questions.');
                             }
