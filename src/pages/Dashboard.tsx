@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { AppShell } from '../components/AppShell';
+import { BookOpen, ClipboardList, Code2, History, Clock, Star, ChevronRight, PlayCircle } from 'lucide-react';
 
 type AssignedAssessment = {
   id: string;
@@ -12,6 +13,13 @@ type AssignedAssessment = {
   totalScore?: number;
   userAssessments?: { status: string; score?: number }[];
 };
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export const Dashboard = () => {
   const { user } = useAuth();
@@ -33,87 +41,141 @@ export const Dashboard = () => {
         if (!cancelled) setLoadingTests(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [user?.role]);
 
+  /* ── Admin Dashboard ── */
   if (user?.role === 'admin') {
     return (
       <AppShell
-        title="Admin workspace"
-        subtitle="Manage your question bank, scheduled tests, and candidate outcomes."
+        title="Command center"
+        subtitle="Orchestrate your questions, assessments, and candidate analytics."
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/admin/questions')}
-            className="group text-left rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:border-emerald-500/40 hover:bg-slate-900 transition-all"
-          >
-            <div className="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">Content</div>
-            <h2 className="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">
-              Questions
-            </h2>
-            <p className="mt-2 text-sm text-slate-400">Create, edit, and curate coding problems.</p>
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/admin/assessments')}
-            className="group text-left rounded-xl border border-slate-800 bg-slate-900/50 p-6 hover:border-emerald-500/40 hover:bg-slate-900 transition-all"
-          >
-            <div className="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">Delivery</div>
-            <h2 className="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">
-              Assessments
-            </h2>
-            <p className="mt-2 text-sm text-slate-400">Create tests, assign students, and view scores.</p>
-          </button>
+        <div className="space-y-8 animate-fade-in">
+          {/* Greeting */}
+          <div className="rounded-2xl bg-gradient-to-br from-indigo-600/15 to-purple-600/10 border border-indigo-500/15 p-6">
+            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">{getGreeting()}</p>
+            <h2 className="text-2xl font-bold text-white">{user.fullName} 👋</h2>
+            <p className="text-sm text-slate-400 mt-1">Here's your admin dashboard overview.</p>
+          </div>
+
+          {/* Quick action cards */}
+          <div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Quick Actions</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  icon: <BookOpen size={22} className="text-indigo-400" />,
+                  label: 'Question Bank',
+                  title: 'Questions',
+                  desc: 'Curate and manage your collection of coding challenges.',
+                  to: '/admin/questions',
+                  color: 'indigo',
+                },
+                {
+                  icon: <ClipboardList size={22} className="text-purple-400" />,
+                  label: 'Test Logistics',
+                  title: 'Assessments',
+                  desc: 'Schedule evaluations and monitor candidate performance.',
+                  to: '/admin/assessments',
+                  color: 'purple',
+                },
+              ].map((card) => (
+                <button
+                  key={card.to}
+                  type="button"
+                  onClick={() => navigate(card.to)}
+                  className="group text-left card card-interactive p-6 flex items-start gap-5"
+                >
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-${card.color}-500/10 border border-${card.color}-500/15 group-hover:bg-${card.color}-500/15 transition-colors`}>
+                    {card.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                      {card.label}
+                    </p>
+                    <h3 className="text-base font-bold text-white">{card.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{card.desc}</p>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all shrink-0 mt-1" />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </AppShell>
     );
   }
 
+  /* ── Candidate Dashboard ── */
   return (
     <AppShell
-      title={`Welcome, ${user?.fullName?.split(' ')[0] || 'there'}`}
-      subtitle="Your assigned tests and practice tools in one place."
+      title={`${getGreeting()}, ${user?.fullName?.split(' ')[0] || 'Member'}`}
+      subtitle="Access your active assessments and skill development tools."
     >
-      <div className="space-y-10">
+      <div className="space-y-8 animate-fade-in">
+        {/* Assigned Assessments */}
         <section>
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">Assigned tests</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+              Assigned Evaluations
+            </h2>
+            <div className="h-px flex-1 bg-slate-800 ml-4" />
           </div>
+
           {loadingTests ? (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-500 text-sm">
-              Loading your tests…
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="rounded-2xl border border-slate-800 p-6 space-y-3">
+                  <div className="skeleton h-4 w-48 rounded" />
+                  <div className="skeleton h-3 w-72 rounded" />
+                  <div className="skeleton h-10 w-full rounded-xl mt-4" />
+                </div>
+              ))}
             </div>
           ) : assigned.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/30 p-8 text-center">
-              <p className="text-slate-400 text-sm">No tests assigned yet.</p>
-              <p className="text-slate-600 text-xs mt-2">When an admin assigns you an assessment, it will appear here.</p>
+            <div className="empty-state">
+              <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center mb-4">
+                <ClipboardList size={22} className="text-slate-600" />
+              </div>
+              <p className="text-slate-400 font-semibold text-sm">No assigned assessments</p>
+              <p className="text-slate-600 text-xs mt-1">Awaiting administrator assignment</p>
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {assigned.map((a) => {
                 const ua = a.userAssessments?.[0];
                 const rawStatus = ua?.status || 'not_started';
                 const statusLabel = rawStatus.replace('_', ' ');
                 const isCompleted = rawStatus === 'completed';
+
                 return (
                   <div
                     key={a.id}
-                    className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 flex flex-col"
+                    className="card p-6 flex flex-col"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">{a.title}</h3>
-                      {a.description ? (
-                        <p className="mt-1 text-sm text-slate-400 line-clamp-2">{a.description}</p>
-                      ) : null}
-                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
-                        <span>{a.duration} min</span>
-                        {a.totalScore != null && <span>{a.totalScore} pts</span>}
-                        <span className="capitalize">{statusLabel}</span>
-                      </div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <h3 className="text-base font-bold text-white leading-tight">{a.title}</h3>
+                      <span className={`shrink-0 badge ${isCompleted ? 'bg-slate-700/60 text-slate-400 border-slate-700' : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/25'}`}>
+                        {statusLabel}
+                      </span>
                     </div>
+
+                    {a.description && (
+                      <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed">{a.description}</p>
+                    )}
+
+                    <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-500 mb-5">
+                      <span className="flex items-center gap-1.5">
+                        <Clock size={12} className="text-slate-600" /> {a.duration} min
+                      </span>
+                      {a.totalScore != null && (
+                        <span className="flex items-center gap-1.5">
+                          <Star size={12} className="text-slate-600" /> {a.totalScore} pts
+                        </span>
+                      )}
+                    </div>
+
                     <button
                       type="button"
                       onClick={async () => {
@@ -138,23 +200,20 @@ export const Dashboard = () => {
                         }
                       }}
                       disabled={isCompleted || startingId === a.id}
-                      className={`mt-4 w-full sm:w-auto self-start rounded-lg px-4 py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+                      className={`mt-auto w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
                         isCompleted
-                          ? 'border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700'
-                          : startingId === a.id 
-                            ? 'bg-emerald-600/50 text-white/50 cursor-not-allowed'
-                            : 'bg-emerald-600 text-white hover:bg-emerald-500'
+                          ? 'bg-slate-800 text-slate-500 cursor-default'
+                          : startingId === a.id
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : 'btn-primary'
                       }`}
                     >
                       {startingId === a.id ? (
-                        <>
-                          <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" strokeDasharray="64" strokeDashoffset="48" /><path d="M12 2a10 10 0 0 1 10 10" /></svg>
-                          Starting…
-                        </>
+                        <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Initializing…</>
                       ) : isCompleted ? (
-                        'View submissions'
+                        'Review Submission'
                       ) : (
-                        rawStatus === 'not_started' ? 'Start test' : 'Continue test'
+                        <><PlayCircle size={14} /> {rawStatus === 'not_started' ? 'Begin Session' : 'Resume Session'}</>
                       )}
                     </button>
                   </div>
@@ -164,27 +223,46 @@ export const Dashboard = () => {
           )}
         </section>
 
+        {/* Development Tools */}
         <section>
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">More</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+              Development Tools
+            </h2>
+            <div className="h-px flex-1 bg-slate-800 ml-4" />
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={() => navigate('/practice')}
-              className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-left hover:border-slate-600 transition-colors"
-            >
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Practice</span>
-              <h3 className="mt-2 font-semibold text-white">Problem set</h3>
-              <p className="mt-1 text-sm text-slate-400">Sharpen skills outside of graded tests.</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/submissions')}
-              className="rounded-xl border border-slate-800 bg-slate-900/50 p-5 text-left hover:border-slate-600 transition-colors"
-            >
-              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">History</span>
-              <h3 className="mt-2 font-semibold text-white">Submissions</h3>
-              <p className="mt-1 text-sm text-slate-400">Review past graded attempts.</p>
-            </button>
+            {[
+              {
+                icon: <Code2 size={20} className="text-indigo-400" />,
+                title: 'Practice Problems',
+                desc: 'Independent skill refinement',
+                to: '/practice',
+              },
+              {
+                icon: <History size={20} className="text-purple-400" />,
+                title: 'Submission History',
+                desc: 'Historical performance data',
+                to: '/submissions',
+              },
+            ].map((tool) => (
+              <button
+                key={tool.to}
+                type="button"
+                onClick={() => navigate(tool.to)}
+                className="group card card-interactive p-5 text-left flex items-center gap-4"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-800 group-hover:bg-slate-700 transition-colors">
+                  {tool.icon}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-white">{tool.title}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">{tool.desc}</p>
+                </div>
+                <ChevronRight size={15} className="text-slate-600 group-hover:text-slate-300 group-hover:translate-x-1 transition-all shrink-0" />
+              </button>
+            ))}
           </div>
         </section>
       </div>

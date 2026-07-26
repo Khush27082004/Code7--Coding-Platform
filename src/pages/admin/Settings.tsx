@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import api from '../../services/api';
 import { AppShell } from '../../components/AppShell';
+import { AlertTriangle, RotateCcw, UserX, Trash2 } from 'lucide-react';
 
 export const Settings = () => {
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleAction = async (action: string, endpoint: string, message: string) => {
-    if (!confirm(`⚠️ WARNING: ${message}\n\nThis action is irreversible. Are you absolutely sure?`)) {
+    if (!confirm(`⚠️ SYSTEM_WARNING: ${message}\n\nThis action is irreversible. Are you absolutely sure?`)) {
       return;
     }
-
     setLoading(action);
     try {
       const res = await api.post(`/admin${endpoint}`);
@@ -21,76 +21,105 @@ export const Settings = () => {
     }
   };
 
+  const dangerActions = [
+    {
+      id: 'reset',
+      icon: <RotateCcw size={20} className="text-amber-400" />,
+      title: 'Flush Session Data',
+      desc: 'Purge all assessment attempts and submissions. Entities remain intact; performance data is zeroed.',
+      btnLabel: 'Initiate Reset',
+      btnLoading: 'Executing…',
+      endpoint: '/reset-attempts',
+      message: 'Reset all test attempts and submissions?',
+      variant: 'amber',
+    },
+    {
+      id: 'students',
+      icon: <UserX size={20} className="text-red-400" />,
+      title: 'Wipe Candidate Registry',
+      desc: 'Permanent removal of all candidate credentials, logs, and scoring history. Administrative nodes persist.',
+      btnLabel: 'Execute Full Wipe',
+      btnLoading: 'Purging…',
+      endpoint: '/delete-students',
+      message: 'Delete ALL student accounts and their data?',
+      variant: 'red',
+    },
+    {
+      id: 'tests',
+      icon: <Trash2 size={20} className="text-red-400" />,
+      title: 'Terminate Library Protocol',
+      desc: 'Irreversible deletion of all assessments, questions, and associated validation parameters from core database.',
+      btnLabel: 'Purge Asset Library',
+      btnLoading: 'Terminating…',
+      endpoint: '/delete-tests',
+      message: 'Delete ALL assessments and questions?',
+      variant: 'red',
+    },
+  ];
+
   return (
-    <AppShell 
-      title="Settings" 
-      subtitle="Platform management and data controls"
+    <AppShell
+      title="System Settings"
+      subtitle="Critical platform management and database integrity controls."
     >
-      <div className="max-w-4xl">
-        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-8">
-          <h2 className="text-xl font-bold text-rose-500 flex items-center gap-2 mb-6">
-            <span className="text-2xl">🚨</span> Danger Zone
-          </h2>
-
-          <div className="space-y-6">
-            {/* Reset Attempts */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div className="max-w-xl">
-                <h3 className="text-lg font-bold text-amber-500">Reset All Attempts</h3>
-                <p className="text-sm text-slate-400 mt-1">
-                  Deletes all test attempts and question submissions. Students and tests are kept. All scores and progress will be reset to zero.
-                </p>
-              </div>
-              <button
-                onClick={() => handleAction('reset', '/reset-attempts', 'Reset all test attempts and submissions?')}
-                disabled={loading !== null}
-                className="shrink-0 rounded-lg bg-amber-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-amber-500 disabled:opacity-50 transition-all shadow-lg shadow-amber-900/20"
-              >
-                {loading === 'reset' ? 'Resetting...' : 'Reset All Attempts'}
-              </button>
-            </div>
-
-            {/* Delete All Student Data */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div className="max-w-xl">
-                <h3 className="text-lg font-bold text-rose-500">Delete All Student Data</h3>
-                <p className="text-sm text-slate-400 mt-1">
-                  Removes all student accounts along with their attempts and submissions. Tests, questions, and admin accounts are kept.
-                </p>
-              </div>
-              <button
-                onClick={() => handleAction('students', '/delete-students', 'Delete ALL student accounts and their data?')}
-                disabled={loading !== null}
-                className="shrink-0 rounded-lg bg-rose-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-rose-500 disabled:opacity-50 transition-all shadow-lg shadow-rose-900/20"
-              >
-                {loading === 'students' ? 'Deleting...' : 'Delete All Students & Data'}
-              </button>
-            </div>
-
-            {/* Delete All Tests */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-              <div className="max-w-xl">
-                <h3 className="text-lg font-bold text-rose-600">Delete All Tests</h3>
-                <p className="text-sm text-slate-400 mt-1">
-                  Removes all tests, questions, test cases, and all associated attempt data permanently from the platform.
-                </p>
-              </div>
-              <button
-                onClick={() => handleAction('tests', '/delete-tests', 'Delete ALL assessments and questions?')}
-                disabled={loading !== null}
-                className="shrink-0 rounded-lg bg-rose-700 px-6 py-2.5 text-sm font-bold text-white hover:bg-rose-600 disabled:opacity-50 transition-all shadow-lg shadow-rose-950/20"
-              >
-                {loading === 'tests' ? 'Deleting...' : 'Delete All Tests'}
-              </button>
-            </div>
+      <div className="max-w-3xl space-y-6 animate-fade-in">
+        {/* Warning banner */}
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/8 border border-red-500/20">
+          <AlertTriangle size={18} className="text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-red-400">Danger Zone</p>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              All high-level data management operations are recorded in the system audit logs. These actions commit
+              immediate changes to the production database and cannot be reverted once initialized.
+            </p>
           </div>
         </div>
 
-        <div className="mt-12 p-6 rounded-xl border border-slate-800 bg-slate-900/20">
-          <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">System Status</h4>
-          <p className="text-xs text-slate-500">
-            All data management operations are logged for security. These actions perform direct database resets and will not affect the server's availability or uptime.
-          </p>
+        {/* Actions */}
+        <div className="space-y-3">
+          {dangerActions.map((action) => (
+            <div
+              key={action.id}
+              className={`card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-5 hover:border-${action.variant}-500/25 transition-colors`}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-${action.variant}-500/10 border border-${action.variant}-500/15`}>
+                  {action.icon}
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">{action.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-md">{action.desc}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleAction(action.id, action.endpoint, action.message)}
+                disabled={loading !== null}
+                className={`shrink-0 btn-danger disabled:opacity-40 text-xs ${
+                  action.variant === 'amber'
+                    ? 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10 hover:border-amber-500/50'
+                    : ''
+                }`}
+              >
+                {loading === action.id ? (
+                  <><div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" /> {action.btnLoading}</>
+                ) : (
+                  action.btnLabel
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Info box */}
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <span className="text-lg shrink-0">ℹ️</span>
+          <div>
+            <p className="text-xs font-bold text-slate-300 mb-1">Operational Integrity Notice</p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              All high-level data management operations are recorded in the system audit logs. These actions commit
+              immediate changes to the production database and cannot be reverted once initialized.
+            </p>
+          </div>
         </div>
       </div>
     </AppShell>
