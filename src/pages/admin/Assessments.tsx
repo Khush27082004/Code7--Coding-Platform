@@ -80,6 +80,146 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </div>
 );
 
+// ── Shared form content (Moved to top-level to prevent losing input focus) ──
+const FormFields = ({
+  f,
+  setF,
+  qIds,
+  toggleFn,
+  allQuestions,
+  loadingQuestions,
+  isEdit,
+}: {
+  f: any;
+  setF: (v: any) => void;
+  qIds: string[];
+  toggleFn: (id: string) => void;
+  allQuestions: Question[];
+  loadingQuestions: boolean;
+  isEdit?: boolean;
+}) => (
+  <div className="p-6 space-y-5">
+    <Field label="Title *">
+      <input
+        required
+        value={f.title}
+        onChange={e => setF({ ...f, title: e.target.value })}
+        placeholder="e.g. Backend Engineering Round 1"
+        className="input-dark"
+      />
+    </Field>
+
+    <Field label="Description">
+      <textarea
+        rows={2}
+        value={f.description}
+        onChange={e => setF({ ...f, description: e.target.value })}
+        placeholder="Optional instructions for candidates…"
+        className="input-dark resize-none"
+      />
+    </Field>
+
+    <div className="grid grid-cols-2 gap-4">
+      <Field label="Duration (min)">
+        <input
+          type="number"
+          min={5}
+          max={360}
+          value={f.duration}
+          onChange={e => setF({ ...f, duration: parseInt(e.target.value) || 60 })}
+          className="input-dark"
+        />
+      </Field>
+      <Field label="Passing Score">
+        <input
+          type="number"
+          min={0}
+          value={f.passingScore}
+          onChange={e => setF({ ...f, passingScore: parseInt(e.target.value) || 0 })}
+          className="input-dark"
+        />
+      </Field>
+    </div>
+
+    {/* Question picker */}
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          Questions {!isEdit && '*'}
+        </label>
+        <span className="text-xs text-slate-500">
+          {loadingQuestions ? 'Loading…' : `${qIds.length} selected`}
+        </span>
+      </div>
+      <div className={`bg-slate-900/80 border rounded-xl overflow-hidden max-h-48 overflow-y-auto divide-y divide-slate-800/60 ${
+        isEdit && (f.isActive || loadingQuestions) ? 'border-slate-800 opacity-60' : 'border-slate-700'
+      }`}>
+        {loadingQuestions ? (
+          <div className="px-4 py-8 text-center">
+            <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-slate-500 text-xs">Fetching questions…</p>
+          </div>
+        ) : allQuestions.length === 0 ? (
+          <p className="px-4 py-6 text-center text-slate-600 text-sm">No questions found.</p>
+        ) : (
+          allQuestions.map(q => {
+            const sel = qIds.includes(q.id);
+            const disabled = isEdit && (f.isActive || loadingQuestions);
+            return (
+              <div
+                key={q.id}
+                onClick={() => !disabled && toggleFn(q.id)}
+                className={`flex items-center justify-between px-4 py-3 transition-colors ${
+                  disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800/50'
+                } ${sel && !disabled ? 'bg-indigo-600/8' : ''}`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                    sel ? 'bg-indigo-600 border-indigo-600' : 'border-slate-600'
+                  }`}>
+                    {sel && <span className="text-white text-[10px] leading-none">✓</span>}
+                  </div>
+                  <span className="text-sm text-slate-200 font-medium truncate">{q.title}</span>
+                  <span className={`badge shrink-0 ${
+                    q.difficulty === 'easy' ? 'badge-easy' :
+                    q.difficulty === 'medium' ? 'badge-medium' : 'badge-hard'
+                  }`}>{q.difficulty}</span>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+      {isEdit && f.isActive && !loadingQuestions && (
+        <p className="text-[10px] text-amber-400/80 mt-1.5">
+          🔒 Questions are locked while the test is Active. Switch to Inactive to edit.
+        </p>
+      )}
+    </div>
+
+    {/* Active toggle */}
+    <label className={`flex items-center gap-3 p-4 border rounded-xl transition-all cursor-pointer ${
+      f.isActive ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-slate-700 hover:border-slate-600'
+    }`}>
+      <div className="relative flex items-center shrink-0">
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={f.isActive}
+          disabled={isEdit && loadingQuestions}
+          onChange={e => setF({ ...f, isActive: e.target.checked })}
+        />
+        <div className={`w-10 h-6 rounded-full transition-colors ${f.isActive ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+        <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow transition-transform ${f.isActive ? 'translate-x-4' : ''}`} />
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-white leading-none">Assessment Active</div>
+        <div className="text-xs text-slate-500 mt-0.5">Candidates can view and start this test.</div>
+      </div>
+    </label>
+  </div>
+);
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export const Assessments = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -216,141 +356,7 @@ export const Assessments = () => {
     setEditSelQIds(p => (p.includes(id) ? p.filter(x => x !== id) : [...p, id]));
   };
 
-  // ── Shared form content ──────────────────────────────────────────────────────
-  const FormFields = ({
-    f,
-    setF,
-    qIds,
-    toggleFn,
-    isEdit,
-  }: {
-    f: typeof form;
-    setF: (v: typeof form) => void;
-    qIds: string[];
-    toggleFn: (id: string) => void;
-    isEdit?: boolean;
-  }) => (
-    <div className="p-6 space-y-5">
-      <Field label="Title *">
-        <input
-          required
-          value={f.title}
-          onChange={e => setF({ ...f, title: e.target.value })}
-          placeholder="e.g. Backend Engineering Round 1"
-          className="input-dark"
-        />
-      </Field>
-
-      <Field label="Description">
-        <textarea
-          rows={2}
-          value={f.description}
-          onChange={e => setF({ ...f, description: e.target.value })}
-          placeholder="Optional instructions for candidates…"
-          className="input-dark resize-none"
-        />
-      </Field>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Duration (min)">
-          <input
-            type="number"
-            min={5}
-            max={360}
-            value={f.duration}
-            onChange={e => setF({ ...f, duration: parseInt(e.target.value) || 60 })}
-            className="input-dark"
-          />
-        </Field>
-        <Field label="Passing Score">
-          <input
-            type="number"
-            min={0}
-            value={f.passingScore}
-            onChange={e => setF({ ...f, passingScore: parseInt(e.target.value) || 0 })}
-            className="input-dark"
-          />
-        </Field>
-      </div>
-
-      {/* Question picker */}
-      <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Questions {!isEdit && '*'}
-          </label>
-          <span className="text-xs text-slate-500">
-            {loadingQuestions ? 'Loading…' : `${qIds.length} selected`}
-          </span>
-        </div>
-        <div className={`bg-slate-900/80 border rounded-xl overflow-hidden max-h-48 overflow-y-auto divide-y divide-slate-800/60 ${
-          isEdit && (f.isActive || loadingQuestions) ? 'border-slate-800 opacity-60' : 'border-slate-700'
-        }`}>
-          {loadingQuestions ? (
-            <div className="px-4 py-8 text-center">
-              <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-              <p className="text-slate-500 text-xs">Fetching questions…</p>
-            </div>
-          ) : allQuestions.length === 0 ? (
-            <p className="px-4 py-6 text-center text-slate-600 text-sm">No questions found.</p>
-          ) : (
-            allQuestions.map(q => {
-              const sel = qIds.includes(q.id);
-              const disabled = isEdit && (f.isActive || loadingQuestions);
-              return (
-                <div
-                  key={q.id}
-                  onClick={() => !disabled && toggleFn(q.id)}
-                  className={`flex items-center justify-between px-4 py-3 transition-colors ${
-                    disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-slate-800/50'
-                  } ${sel && !disabled ? 'bg-indigo-600/8' : ''}`}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
-                      sel ? 'bg-indigo-600 border-indigo-600' : 'border-slate-600'
-                    }`}>
-                      {sel && <span className="text-white text-[10px] leading-none">✓</span>}
-                    </div>
-                    <span className="text-sm text-slate-200 font-medium truncate">{q.title}</span>
-                    <span className={`badge shrink-0 ${
-                      q.difficulty === 'easy' ? 'badge-easy' :
-                      q.difficulty === 'medium' ? 'badge-medium' : 'badge-hard'
-                    }`}>{q.difficulty}</span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-        {isEdit && f.isActive && !loadingQuestions && (
-          <p className="text-[10px] text-amber-400/80 mt-1.5">
-            🔒 Questions are locked while the test is Active. Switch to Inactive to edit.
-          </p>
-        )}
-      </div>
-
-      {/* Active toggle */}
-      <label className={`flex items-center gap-3 p-4 border rounded-xl transition-all cursor-pointer ${
-        f.isActive ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-slate-700 hover:border-slate-600'
-      }`}>
-        <div className="relative flex items-center shrink-0">
-          <input
-            type="checkbox"
-            className="sr-only"
-            checked={f.isActive}
-            disabled={isEdit && loadingQuestions}
-            onChange={e => setF({ ...f, isActive: e.target.checked })}
-          />
-          <div className={`w-10 h-6 rounded-full transition-colors ${f.isActive ? 'bg-emerald-500' : 'bg-slate-700'}`} />
-          <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full shadow transition-transform ${f.isActive ? 'translate-x-4' : ''}`} />
-        </div>
-        <div>
-          <div className="text-sm font-semibold text-white leading-none">Assessment Active</div>
-          <div className="text-xs text-slate-500 mt-0.5">Candidates can view and start this test.</div>
-        </div>
-      </label>
-    </div>
-  );
+  // FormFields extracted to top level to prevent losing input focus.
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -521,7 +527,7 @@ export const Assessments = () => {
       {showCreate && (
         <Modal title="Create Assessment" onClose={() => setShowCreate(false)} wide>
           <form onSubmit={handleCreate}>
-            <FormFields f={form} setF={setForm} qIds={selQIds} toggleFn={toggleQ} />
+            <FormFields f={form} setF={setForm} qIds={selQIds} toggleFn={toggleQ} allQuestions={allQuestions} loadingQuestions={loadingQuestions} />
             <div className="px-6 pb-6">
               <button
                 type="submit"
@@ -541,7 +547,7 @@ export const Assessments = () => {
       {showEdit && editTarget && (
         <Modal title={`Edit: ${editTarget.title}`} onClose={() => setShowEdit(false)} wide>
           <form onSubmit={handleEdit}>
-            <FormFields f={editForm} setF={setEditForm} qIds={editSelQIds} toggleFn={toggleEditQ} isEdit />
+            <FormFields f={editForm} setF={setEditForm} qIds={editSelQIds} toggleFn={toggleEditQ} allQuestions={allQuestions} loadingQuestions={loadingQuestions} isEdit />
             <div className="px-6 pb-6">
               <button
                 type="submit"

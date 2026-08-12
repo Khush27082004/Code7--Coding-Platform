@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Login } from './pages/Login';
@@ -37,14 +37,19 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 function AppRoutes() {
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Hide sidebar on the active coding console page (/practice/:id)
+  const isCodingConsole = location.pathname.startsWith('/practice/') && location.pathname !== '/practice';
+  const showSidebar = user && !isCodingConsole;
 
   return (
     <>
-      {/* Sidebar — only for authenticated users */}
-      {user && <Navbar />}
+      {/* Sidebar — only for authenticated users outside coding console */}
+      {showSidebar && <Navbar />}
 
       {/* Main content area — offset by sidebar on desktop */}
-      <div className={user ? 'main-content pt-14 lg:pt-0' : ''}>
+      <div className={showSidebar ? 'main-content pt-14 lg:pt-0' : ''}>
         <Routes>
           <Route path="/login"    element={user ? <Navigate to="/" /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/" /> : <Register />} />

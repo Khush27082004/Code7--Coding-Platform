@@ -81,7 +81,7 @@ export const Questions = () => {
         {/* Search */}
         {questions.length > 0 && (
           <div className="relative max-w-sm group">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors pointer-events-none" />
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-black transition-colors pointer-events-none" />
             <input
               type="text"
               placeholder="Search by title or tag…"
@@ -134,13 +134,13 @@ export const Questions = () => {
                       q.difficulty === 'medium' ? 'bg-amber-500' : 'bg-red-500'
                     }`} />
                     <div className="min-w-0">
-                      <h3 className="text-sm font-bold text-white truncate">{q.title}</h3>
+                      <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">{q.title}</h3>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         <span className={`badge ${diff.cls}`}>{diff.label}</span>
                         {q.tags.map((tag) => (
                           <span
                             key={tag}
-                            className="badge bg-slate-700/50 text-slate-400 border-slate-700"
+                            className="badge bg-neutral-100 text-neutral-600 border border-neutral-200"
                           >
                             {tag}
                           </span>

@@ -65,20 +65,18 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 {
-                  icon: <BookOpen size={22} className="text-indigo-400" />,
+                  icon: <BookOpen size={22} className="text-neutral-800" />,
                   label: 'Question Bank',
                   title: 'Questions',
                   desc: 'Curate and manage your collection of coding challenges.',
                   to: '/admin/questions',
-                  color: 'indigo',
                 },
                 {
-                  icon: <ClipboardList size={22} className="text-purple-400" />,
+                  icon: <ClipboardList size={22} className="text-neutral-800" />,
                   label: 'Test Logistics',
                   title: 'Assessments',
                   desc: 'Schedule evaluations and monitor candidate performance.',
                   to: '/admin/assessments',
-                  color: 'purple',
                 },
               ].map((card) => (
                 <button
@@ -87,17 +85,17 @@ export const Dashboard = () => {
                   onClick={() => navigate(card.to)}
                   className="group text-left card card-interactive p-6 flex items-start gap-5"
                 >
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-${card.color}-500/10 border border-${card.color}-500/15 group-hover:bg-${card.color}-500/15 transition-colors`}>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 border border-neutral-200 group-hover:bg-neutral-200 transition-colors">
                     {card.icon}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                       {card.label}
                     </p>
-                    <h3 className="text-base font-bold text-white">{card.title}</h3>
+                    <h3 className="text-base font-bold text-[var(--text-primary)]">{card.title}</h3>
                     <p className="text-xs text-slate-500 mt-1 leading-relaxed">{card.desc}</p>
                   </div>
-                  <ChevronRight size={16} className="text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all shrink-0 mt-1" />
+                  <ChevronRight size={16} className="text-slate-600 group-hover:text-black group-hover:translate-x-1 transition-all shrink-0 mt-1" />
                 </button>
               ))}
             </div>
@@ -155,8 +153,12 @@ export const Dashboard = () => {
                     className="card p-6 flex flex-col"
                   >
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <h3 className="text-base font-bold text-white leading-tight">{a.title}</h3>
-                      <span className={`shrink-0 badge ${isCompleted ? 'bg-slate-700/60 text-slate-400 border-slate-700' : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/25'}`}>
+                      <h3 className="text-base font-bold text-[var(--text-primary)] leading-tight">{a.title}</h3>
+                      <span className={`shrink-0 badge uppercase tracking-widest text-[9px] font-extrabold px-2 py-0.5 border ${
+                        isCompleted
+                          ? 'bg-neutral-100 text-neutral-600 border-neutral-200'
+                          : 'bg-black text-white border-black'
+                      }`}>
                         {statusLabel}
                       </span>
                     </div>

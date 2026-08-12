@@ -87,7 +87,7 @@ export const Settings = () => {
                   {action.icon}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">{action.title}</h3>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">{action.title}</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-md">{action.desc}</p>
                 </div>
               </div>
@@ -96,8 +96,8 @@ export const Settings = () => {
                 disabled={loading !== null}
                 className={`shrink-0 btn-danger disabled:opacity-40 text-xs ${
                   action.variant === 'amber'
-                    ? 'text-amber-400 border-amber-500/30 hover:bg-amber-500/10 hover:border-amber-500/50'
-                    : ''
+                    ? 'text-amber-700 border-amber-500/40 hover:bg-amber-500/10 hover:border-amber-500/50'
+                    : 'text-red-700 border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50'
                 }`}
               >
                 {loading === action.id ? (
