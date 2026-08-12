@@ -128,7 +128,7 @@ export const Register = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="login-form" noValidate>
+          <form onSubmit={handleSubmit} className="login-form" autoComplete="off" noValidate>
             {/* Full Name */}
             <div className="login-field">
               <label className="login-label" htmlFor="reg-name">Full Name</label>
@@ -141,7 +141,7 @@ export const Register = () => {
                   onChange={(e) => setFullName(e.target.value)}
                   className="login-input"
                   placeholder="John Doe"
-                  autoComplete="name"
+                  autoComplete="off"
                   required
                   minLength={2}
                 />
@@ -160,7 +160,7 @@ export const Register = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="login-input"
                   placeholder="name@example.com"
-                  autoComplete="new-email"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -178,7 +178,7 @@ export const Register = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="login-input"
                   placeholder="Min. 6 characters"
-                  autoComplete="new-password"
+                  autoComplete="off"
                   required
                   minLength={6}
                 />

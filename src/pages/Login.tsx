@@ -146,7 +146,7 @@ export const Login = () => {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="login-form" noValidate>
+          <form onSubmit={handleSubmit} className="login-form" autoComplete="off" noValidate>
             {/* Email field */}
             <div className="login-field">
               <label className="login-label" htmlFor="login-email">
@@ -161,7 +161,7 @@ export const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="login-input"
                   placeholder="name@example.com"
-                  autoComplete="new-email"
+                  autoComplete="off"
                   required
                 />
               </div>
@@ -184,7 +184,7 @@ export const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="login-input"
                   placeholder="••••••••"
-                  autoComplete="new-password"
+                  autoComplete="off"
                   required
                 />
                 <button
