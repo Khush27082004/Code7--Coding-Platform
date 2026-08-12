@@ -111,11 +111,11 @@ export const Settings = () => {
         </div>
 
         {/* Info box */}
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-neutral-100 border border-neutral-200 shadow-sm">
           <span className="text-lg shrink-0">ℹ️</span>
           <div>
-            <p className="text-xs font-bold text-slate-300 mb-1">Operational Integrity Notice</p>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs font-bold text-neutral-950 mb-1">Operational Integrity Notice</p>
+            <p className="text-xs text-neutral-600 leading-relaxed font-medium">
               All high-level data management operations are recorded in the system audit logs. These actions commit
               immediate changes to the production database and cannot be reverted once initialized.
             </p>

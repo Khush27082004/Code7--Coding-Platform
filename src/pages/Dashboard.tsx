@@ -53,10 +53,10 @@ export const Dashboard = () => {
       >
         <div className="space-y-8 animate-fade-in">
           {/* Greeting */}
-          <div className="rounded-2xl bg-gradient-to-br from-indigo-600/15 to-purple-600/10 border border-indigo-500/15 p-6">
-            <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-1">{getGreeting()}</p>
-            <h2 className="text-2xl font-bold text-white">{user.fullName} 👋</h2>
-            <p className="text-sm text-slate-400 mt-1">Here's your admin dashboard overview.</p>
+          <div className="rounded-2xl bg-neutral-900 border border-neutral-850 p-6 shadow-sm">
+            <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-1">{getGreeting()}</p>
+            <h2 className="text-2xl font-bold text-white capitalize">{user.fullName} 👋</h2>
+            <p className="text-sm text-neutral-300 mt-1">Here's your admin dashboard overview.</p>
           </div>
 
           {/* Quick action cards */}
