@@ -49,33 +49,33 @@ export const Login = () => {
         <div className="mono-hero">
           <div className="mono-pill">
             <span className="mono-pill-dot" />
-            Active Platform Status
+            Code7 Assessment Platform
           </div>
           <h1 className="mono-headline">
-            Assess with precision.<br />
-            Hire with <span className="mono-text-glow">confidence</span>.
+            Practice coding.<br />
+            Ace your <span className="mono-text-glow">evaluations</span>.
           </h1>
           <p className="mono-subheadline">
-            A minimalist, high-performance coding assessment platform engineered for modern engineering teams.
+            An advanced coding assessment and skill development platform engineered for students and instructors.
           </p>
 
           <div className="mono-features">
             <div className="mono-feature">
               <span className="mono-feature-bullet" />
-              <p>Real-time compiler & sandboxed execution</p>
+              <p>Solve assignment sets and practice problems</p>
             </div>
             <div className="mono-feature">
               <span className="mono-feature-bullet" />
-              <p>Detailed performance analytics & insights</p>
+              <p>Track history logs and grading performance</p>
             </div>
             <div className="mono-feature">
               <span className="mono-feature-bullet" />
-              <p>Automated proctoring & tab activity logs</p>
+              <p>Real-time compilation and automated tests</p>
             </div>
           </div>
         </div>
 
-        <p className="mono-footer-text">© 2026 Code7 Inc. All rights reserved.</p>
+        <p className="mono-footer-text">© 2026 Code7 Platform. All rights reserved.</p>
       </div>
 
       {/* ── Right panel (Card) ── */}

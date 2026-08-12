@@ -51,29 +51,29 @@ export const Register = () => {
         <div className="mono-hero">
           <div className="mono-pill">
             <span className="mono-pill-dot" />
-            Active Platform Status
+            Code7 Assessment Platform
           </div>
           <h1 className="mono-headline">
-            Start your console.<br />
-            Build the future.
+            Start your session.<br />
+            Enhance your skills.
           </h1>
           <p className="mono-subheadline">
-            Create an account on the Code7 assessment platform to practice problems, take tests, or manage questions.
+            Create an account on Code7 to complete assigned evaluations, practice coding sets, and review grade reports.
           </p>
 
           <div className="mono-features">
             <div className="mono-feature">
               <span className="mono-feature-bullet" />
-              <p>Practice console tailored for engineers</p>
+              <p>Practice modules and independent coding sets</p>
             </div>
             <div className="mono-feature">
               <span className="mono-feature-bullet" />
-              <p>Admin console to manage questions and analytics</p>
+              <p>Admin tools to manage questions, tests, and classes</p>
             </div>
           </div>
         </div>
 
-        <p className="mono-footer-text">© 2026 Code7 Inc. All rights reserved.</p>
+        <p className="mono-footer-text">© 2026 Code7 Platform. All rights reserved.</p>
       </div>
 
       {/* ── Right panel (Card) ── */}
