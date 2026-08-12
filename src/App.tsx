@@ -16,8 +16,8 @@ import { Submissions } from './pages/candidate/Submissions';
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-[#020617]">
-      <div className="w-8 h-8 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
+    <div className="flex items-center justify-center h-screen bg-[var(--bg-base)]">
+      <div className="w-8 h-8 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
     </div>
   );
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -26,8 +26,8 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div className="flex items-center justify-center h-screen bg-[#020617]">
-      <div className="w-8 h-8 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
+    <div className="flex items-center justify-center h-screen bg-[var(--bg-base)]">
+      <div className="w-8 h-8 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
     </div>
   );
   if (!user) return <Navigate to="/login" />;

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock, ShieldCheck, UserPlus, Eye, EyeOff, Terminal } from 'lucide-react';
@@ -13,6 +13,13 @@ export const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Wake up Render web service early (cold start optimization)
+    const backendUrl = import.meta.env.VITE_API_URL || '/api/v1';
+    const healthUrl = backendUrl.replace('/api/v1', '/health');
+    fetch(healthUrl).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
